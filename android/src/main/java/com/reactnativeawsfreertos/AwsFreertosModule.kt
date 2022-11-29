@@ -16,6 +16,7 @@ import android.os.ParcelUuid
 import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.core.app.ActivityCompat.requestPermissions
+import androidx.core.app.ActivityCompat.checkSelfPermission
 import androidx.core.app.ActivityCompat.startActivityForResult
 import com.amazonaws.auth.AWSCredentialsProvider
 import com.amazonaws.mobile.client.AWSMobileClient
@@ -32,6 +33,7 @@ class AwsFreertosModule(reactContext: ReactApplicationContext) : ReactContextBas
 
   private val REQUEST_ENABLE_BT = 1
   private val PERMISSION_REQUEST_FINE_LOCATION = 1
+  private val PERMISSIONS_MULTIPLE_REQUEST_BLUETOOTH = 2
 
   override fun getName(): String {
       return "AwsFreertos"
@@ -44,6 +46,14 @@ class AwsFreertosModule(reactContext: ReactApplicationContext) : ReactContextBas
           Log.i("", "ACCESS_FINE_LOCATION granted.")
         } else {
           Log.w("", "ACCESS_FINE_LOCATION denied")
+        }
+      }
+      PERMISSIONS_MULTIPLE_REQUEST_BLUETOOTH -> {
+        if(grantResults[0] == PackageManager.PERMISSION_GRANTED && grantResults[1] == PackageManager.PERMISSION_GRANTED)
+        {
+          Log.i("", "BLUETOOTH_SCAN & BLUETOOTH_CONNECT granted.")
+        } else {
+          Log.w("", "BLUETOOTH_SCAN & BLUETOOTH_CONNECT denied")
         }
       }
     }
@@ -68,8 +78,19 @@ class AwsFreertosModule(reactContext: ReactApplicationContext) : ReactContextBas
     val enableBtIntent = Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
     currentActivity?.let { startActivityForResult(it,enableBtIntent, REQUEST_ENABLE_BT,null) }
 
-    // requesting user to grant permission.
-    currentActivity?.let { requestPermissions(it,arrayOf(Manifest.permission.ACCESS_FINE_LOCATION), PERMISSION_REQUEST_FINE_LOCATION) }
+    // validation if we have Android 12 or higher.
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+        if (currentActivity?.let { checkSelfPermission(it, Manifest.permission.BLUETOOTH_SCAN) } != PackageManager.PERMISSION_GRANTED || currentActivity?.let { checkSelfPermission(it, Manifest.permission.BLUETOOTH_CONNECT) } != PackageManager.PERMISSION_GRANTED) {
+            val mAmazonFreeRTOSManager = AmazonFreeRTOSAgent.getAmazonFreeRTOSManager(currentActivity)
+            mAmazonFreeRTOSManager.stopScanDevices();
+
+            currentActivity?.let { requestPermissions(it,arrayOf(Manifest.permission.BLUETOOTH_SCAN, Manifest.permission.BLUETOOTH_CONNECT), PERMISSIONS_MULTIPLE_REQUEST_BLUETOOTH) }
+        }
+    } else {
+        if (currentActivity?.let { checkSelfPermission(it, Manifest.permission.ACCESS_FINE_LOCATION) } != PackageManager.PERMISSION_GRANTED) {
+            currentActivity?.let { requestPermissions(it,arrayOf(Manifest.permission.ACCESS_FINE_LOCATION), PERMISSION_REQUEST_FINE_LOCATION) }
+        }
+    }
     promise.resolve("OK")
   }
 
