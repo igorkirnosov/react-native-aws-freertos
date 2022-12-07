@@ -13,11 +13,15 @@ Open the ios project with xcode and run from there to a physical device, since n
 - Android
 Add this to your manifest file under android/app/src/main/AndroidManifest.xml
 ```
-    <uses-permission android:name="android.permission.BLUETOOTH"/>
+    <uses-permission android:name="android.permission.BLUETOOTH" android:maxSdkVersion="30"/>
     <!-- initiate device discovery and manipulate bluetooth settings -->
-    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN"/>
+    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN"  android:maxSdkVersion="30"/>
     <!-- allow scan BLE -->
+    <uses-permission android:name="android.permission.BLUETOOTH_ADVERTISE" />
+    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
+    <uses-permission android:name="android.permission.BLUETOOTH_SCAN" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
 ```
 
 - IOS
@@ -26,7 +30,7 @@ Add this to your Podfile
   use_frameworks! :linkage => :static
   pod 'AmazonFreeRTOS'
   pod 'AWSAuthUI'
-  pod 'AWSMobileClient','~> 2.17.0'
+  pod 'AWSMobileClient'
   pod 'AWSUserPoolsSignIn'
   pod 'react-native-aws-freertos', :path => '../node_modules/react-native-aws-freertos'
 ```
